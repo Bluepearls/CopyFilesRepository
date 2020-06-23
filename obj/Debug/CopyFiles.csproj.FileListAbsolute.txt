@@ -1,0 +1,9 @@
+D:\GitHub\CopyFiles\CopyFiles\bin\Debug\CopyFiles.exe.config
+D:\GitHub\CopyFiles\CopyFiles\bin\Debug\CopyFiles.exe
+D:\GitHub\CopyFiles\CopyFiles\bin\Debug\CopyFiles.pdb
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.frmCopyFiles.resources
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.Properties.Resources.resources
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.csproj.GenerateResource.cache
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.csproj.CoreCompileInputs.cache
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.exe
+D:\GitHub\CopyFiles\CopyFiles\obj\Debug\CopyFiles.pdb
