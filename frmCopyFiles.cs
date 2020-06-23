@@ -6,6 +6,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -52,37 +53,32 @@ namespace CopyFiles
 
         private void btnCopyAndPaste_Click(object sender, EventArgs e)
         {
+            this.pnlMessage.Visible = false;
+            this.lblMessage.Text = "";
             if (string.IsNullOrEmpty(txtSolutionName.Text.ToString()))
             {
-                MessageBox.Show("Solution name can not be null");
+                ShowError("Solution name can not be null！");
                 txtSolutionName.Focus();
                 return;
             }
             if (string.IsNullOrEmpty(txtSourcePath.Text.ToString()))
             {
-                MessageBox.Show("Source path can not be null");
+                ShowError("Source path can not be null！");
                 txtSourcePath.Focus();
                 return;
             }
             if (string.IsNullOrEmpty(txtTargetPath.Text.ToString()))
             {
-                MessageBox.Show("target path can not be null");
+                ShowError("target path can not be null ！");
                 txtSourcePath.Focus();
                 return;
-            }
-            if (this.cboRestart.Checked == true)
-            {
-                if (string.IsNullOrEmpty(txtUrl.Text.ToString()))
-                {
-                    MessageBox.Show("web client url can not be null");
-                    txtUrl.Focus();
-                    return;
-                }
             }
             bool copy = CopyDirectory(this.txtSourcePath.Text, this.txtTargetPath.Text, this.txtSolutionName.Text, true, this.cboCopyView.Checked, this.cboCopyDll.Checked);
             if (copy)
             {
-                MessageBox.Show("Copy and Paste Succeed");
+                this.pnlMessage.Visible = true;
+                this.lblMessage.ForeColor = Color.Green;
+                this.lblMessage.Text = "Copy Succeed.";
                 IDictionary<string, string> writeXMLValue = new Dictionary<string, string>();
                 writeXMLValue.Add("SolutionName", this.txtSolutionName.Text);
                 writeXMLValue.Add("SourcePath", this.txtSourcePath.Text);
@@ -95,7 +91,19 @@ namespace CopyFiles
                     OpenGoogle(txtUrl.Text.ToString());
                 }
             }
-            else { MessageBox.Show("Copy and Paste Failed"); }
+            else
+            {
+                this.pnlMessage.Visible = true;
+                this.lblMessage.ForeColor = Color.Red;
+                this.lblMessage.Text = "Copy Failed.";
+            }
+        }
+
+        private void ShowError(string message)
+        {
+            this.pnlMessage.Visible = true;
+            this.lblMessage.ForeColor = Color.Red;
+            this.lblMessage.Text = message;
         }
 
         private void SaveFile(IDictionary<string, string> writeXMLValue)
@@ -165,11 +173,11 @@ namespace CopyFiles
                 {
                     if (needcopyDLL)
                     {
-                        CopyFiles(sourcePathValue, destinationPathValue + @"\bin\", fileText, overwriteexisting);
+                        CopyFiles(sourcePathValue + @"\bin\", destinationPathValue + @"\bin\", fileText, overwriteexisting);
                     }
                     if (needcopyView)
                     {
-                        if (!CopyView(sourcePathValue + @"Release\Publish\Areas\", destinationPathValue + @"Areas\", true))
+                        if (!CopyView(sourcePathValue + @"\Areas\", destinationPathValue + @"Areas\", true))
                         {
                             ret = false;
                         }
@@ -197,8 +205,11 @@ namespace CopyFiles
                 foreach (string drs in Directory.GetDirectories(sourcePathReleaseValue))
                 {
                     DirectoryInfo drinfo = new DirectoryInfo(drs);
-                    if (CopyView(drs, targetPathReleaseValue + drinfo.Name, overwriteexisting) == false)
-                        ret = false;
+                    if (drinfo.Name != "Controllers" && drinfo.Name != "Infrastructure" && drinfo.Name != "ViewModels" && drinfo.Name != "Shared")
+                    {
+                        if (CopyView(drs, targetPathReleaseValue + drinfo.Name, overwriteexisting) == false)
+                            ret = false;
+                    }
                 }
 
                 ret = true;
@@ -225,12 +236,38 @@ namespace CopyFiles
                     {
                         if (flinfo.Name.Contains(fileText) && flinfo.Name.EndsWith("dll"))
                         {
-                            flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                            if (File.Exists(destinationPathValue + flinfo.Name))
+                            {
+                                if (!FileContentChanged(sourcePathValue + flinfo.Name, destinationPathValue + flinfo.Name))
+                                {
+                                    flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                                }
+                            }
+                            else
+                            {
+                                flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                            }
                         }
                     }
                     else
                     {
-                        flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                        if (File.Exists(destinationPathValue + flinfo.Name))
+                        {
+                            if (!flinfo.Name.Contains("AreaRegistration.cs"))
+                            {
+                                if (!FileContentChanged(sourcePathValue + flinfo.Name, destinationPathValue + flinfo.Name))
+                                {
+                                    flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!flinfo.Name.Contains("AreaRegistration.cs"))
+                            {
+                                flinfo.CopyTo(destinationPathValue + flinfo.Name, overwriteexisting);
+                            }
+                        }
                     }
                 }
             }
@@ -264,13 +301,28 @@ namespace CopyFiles
             {
                 if (string.IsNullOrEmpty(dialog.SelectedPath))
                 {
-                    MessageBox.Show(this, "the path can not be null ", "Message");
+                    ShowError("the path can not be null！");
                     return "";
                 }
                 return dialog.SelectedPath;
             }
             return "";
         }
+
+        public static bool FileContentChanged(string sourthpath, string targetpath)
+        {
+            using (HashAlgorithm hash = HashAlgorithm.Create())
+            {
+                using (FileStream file1 = new FileStream(sourthpath, FileMode.Open), file2 = new FileStream(targetpath, FileMode.Open))
+                {
+                    byte[] hashByte1 = hash.ComputeHash(file1);
+                    byte[] hashByte2 = hash.ComputeHash(file2);
+                    string str1 = BitConverter.ToString(hashByte1);
+                    string str2 = BitConverter.ToString(hashByte2);
+                    return (str1 == str2);
+                }
+            }
+        }
+
     }
 }
-
