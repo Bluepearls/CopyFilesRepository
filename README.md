@@ -1,6 +1,6 @@
 # Copy Files
 Copy files with log information for FF web development
-![Copy file form](https://github.com/Bluepearls/CopyFilesRepository/blob/master/CopyFilesWithLogInfo/CopyFiles.jpg)
+![Copy file form](https://github.com/Bluepearls/CopyFilesRepository/blob/master/CopyFiles.jpg)
 1.	Solution Name: the web client solution name, the setting is mandatory
 2.	Source Path: the source code web folder path, the setting is mandatory
 3.	Target Path: the FlexFlow web site’s physical path, the setting is mandatory
